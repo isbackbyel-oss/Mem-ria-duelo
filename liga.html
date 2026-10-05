@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2b1f4a">
+<link rel="manifest" href="manifest.json">
+<title>Memória Duelo</title>
+<style>
+:root{--bg:#2b1f4a;--back:#ffb703;--face:#fff7e6;--me:#3ddc97;--opp:#ff5d8f;--txt:#fff7e6}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{min-height:100vh;min-height:100dvh;background:var(--bg);color:var(--txt);font-family:ui-rounded,"Segoe UI",system-ui,sans-serif;display:flex;justify-content:center;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)}
+main{width:100%;max-width:420px;margin:auto 0;padding:16px 0 96px;display:flex;flex-direction:column;gap:14px}
+h1{font-size:2rem;margin:0;text-align:center}
+.tela{display:none;flex-direction:column;gap:12px}
+.tela.on{display:flex}
+button,input,select{font:inherit;border-radius:14px;border:0;padding:14px;font-size:1.1rem}
+button{background:var(--back);color:#2b1f4a;font-weight:700}
+button.sec{background:transparent;color:var(--txt);border:2px solid var(--txt)}
+button.grande{padding:20px;font-size:1.25rem}
+.tog{background:transparent;color:var(--txt);border:2px solid var(--txt)}
+.tog.on{background:var(--back);color:#2b1f4a;border-color:var(--back)}
+input,select{text-align:center;background:var(--face);color:#2b1f4a}
+#cod{text-transform:uppercase;letter-spacing:.3em}
+.codigo{font-size:3rem;letter-spacing:.2em;text-align:center;font-weight:800;color:var(--back)}
+.msg{text-align:center;min-height:1.4em;margin:0}
+.nota{text-align:center;font-size:.9rem;opacity:.85;margin:0}
+.titulo{text-align:center;font-size:1.3rem;font-weight:700;margin:0}
+.dupla,.tres{display:flex;gap:8px}
+.dupla button,.tres button{flex:1;padding:12px 4px;font-size:1rem}
+.card{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,247,230,.12);color:var(--txt);font-size:1.15rem}
+.barra{height:12px;border-radius:8px;background:rgba(255,247,230,.18);overflow:hidden}
+.barra i{display:block;height:100%;width:0;background:var(--back);transition:width .4s}
+.lis{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.lis li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-radius:14px;background:rgba(255,247,230,.12)}
+.lis li.eu{background:var(--back);color:#2b1f4a;font-weight:700}
+.lis li.off{opacity:.45}
+svg.esc{width:1.5em;height:1.5em;vertical-align:-.35em}
+#som{position:fixed;top:calc(env(safe-area-inset-top) + 8px);right:12px;padding:6px 10px;background:transparent;font-size:1.3rem;border:2px solid rgba(255,247,230,.4)}
+#nav{position:fixed;left:0;right:0;bottom:0;display:none;justify-content:center;gap:6px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:#1f1638;border-top:1px solid rgba(255,247,230,.15)}
+#nav button{flex:1;max-width:100px;padding:8px 2px;font-size:.78rem;background:transparent;color:var(--txt);display:flex;flex-direction:column;align-items:center;gap:2px;border-radius:12px}
+#nav button b{font-size:1.3rem}
+#nav button.on{background:var(--back);color:#2b1f4a}
+.placar{display:flex;justify-content:space-between;gap:10px}
+.jog{flex:1;padding:10px;border-radius:14px;text-align:center;border:3px solid transparent;opacity:.55;overflow:hidden;font-size:.95rem}
+.jog b{display:block;font-size:1.8rem}
+.jog.vez{opacity:1;border-color:var(--face)}
+#j0{background:var(--me);color:#143}
+#j1{background:var(--opp);color:#411}
+#reacao{min-height:1.6em;text-align:center;font-size:1.2rem;margin:0}
+#reac{display:flex;gap:8px}
+#reac button{flex:1;padding:8px;font-size:1.3rem;background:rgba(255,247,230,.15)}
+#grade{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.carta{position:relative;aspect-ratio:1;perspective:600px;border:0;padding:0;background:none}
+.carta i{position:absolute;inset:0;display:grid;place-items:center;border-radius:14px;backface-visibility:hidden;transition:transform .35s;font-style:normal}
+.carta .costas{background:var(--back);font-size:1.4rem;color:#2b1f4a}
+.carta .frente{background:var(--face);font-size:2rem;transform:rotateY(180deg)}
+.carta.vira .costas{transform:rotateY(180deg)}
+.carta.vira .frente{transform:rotateY(0)}
+.carta.par .frente{background:#c9f7e0}
+@media (prefers-reduced-motion:reduce){.carta i{transition:none}}
+</style>
+</head>
+<body>
+<button id="som" aria-label="Som">🔊</button>
+<main>
+  <h1>Memória Duelo</h1>
+
+  <section id="carregando" class="tela on">
+    <p class="msg">Carregando…</p>
+  </section>
+
+  <section id="boas" class="tela">
+    <p class="msg">Bem-vindo! Escolha seu nome de jogador:</p>
+    <input id="nome" maxlength="12" placeholder="Seu nome" autocomplete="off">
+    <p class="nota">Atenção: depois de confirmado, o nome não pode ser trocado.</p>
+    <button id="btnNome">Confirmar nome</button>
+    <p class="msg" id="msgNome"></p>
+  </section>
+
+  <section id="menu" class="tela">
+    <button id="cartao" class="card"></button>
+    <div class="barra"><i id="barraI"></i></div>
+    <p class="nota" id="faltam"></p>
+    <button id="bJogar" class="grande">▶ Jogar online</button>
+    <button id="bTreino" class="grande sec">🤖 Treino</button>
+  </section>
+
+  <section id="jogar" class="tela">
+    <p class="titulo">Jogar online</p>
+    <div class="tres">
+      <button id="mCasual">Casual</button>
+      <button id="mRank" class="sec">Ranqueada</button>
+      <button id="mLiga" class="sec">🏅 Liga</button>
+    </div>
+    <p class="nota" id="ligaNota"></p>
+    <button id="bCriar" class="grande">Criar sala</button>
+    <button id="bEntrar" class="grande sec">Entrar com código</button>
+    <button id="bBuscar" class="grande sec">🔎 Buscar oponente</button>
+    <button id="vJogar" class="sec">Voltar</button>
+  </section>
+
+  <section id="criar" class="tela">
+    <p class="titulo">Criar sala</p>
+    <select id="dif" aria-label="Dificuldade">
+      <option value="f">Fácil · 12 cartas</option>
+      <option value="m" selected>Médio · 16 cartas</option>
+      <option value="d">Difícil · 24 cartas</option>
+    </select>
+    <select id="tema" aria-label="Tema das cartas"></select>
+    <button id="criarSala">Criar sala</button>
+    <button id="vCriar" class="sec">Voltar</button>
+    <p class="msg" id="msgCriar"></p>
+  </section>
+
+  <section id="entrar" class="tela">
+    <p class="titulo">Entrar com código</p>
+    <input id="cod" maxlength="4" placeholder="CÓDIGO" autocomplete="off">
+    <button id="entrarSala">Entrar na sala</button>
+    <button id="vEntrar" class="sec">Voltar</button>
+    <p class="msg" id="msgMenu"></p>
+  </section>
+
+  <section id="buscar" class="tela">
+    <p class="titulo">Buscar oponente</p>
+    <p class="msg" id="modoBuscar"></p>
+    <p class="nota">Marque 1, 2 ou 3 dificuldades. Só pareia com quem tiver pelo menos uma em comum.</p>
+    <div class="tres">
+      <button id="tf" class="tog on">Fácil</button>
+      <button id="tm" class="tog on">Médio</button>
+      <button id="td" class="tog on">Difícil</button>
+    </div>
+    <button id="procurar">Procurar oponente</button>
+    <button id="vBuscar" class="sec">Voltar</button>
+    <p class="msg" id="msgBuscar"></p>
+  </section>
+
+  <section id="buscando" class="tela">
+    <p class="msg">Procurando oponente…</p>
+    <p class="nota" id="infoBusca"></p>
+    <button id="cancelar" class="sec">Cancelar</button>
+  </section>
+
+  <section id="treino" class="tela">
+    <p class="titulo">🤖 Treino</p>
+    <p class="nota">Jogue contra o robô. Não vale pontos nem ranking.</p>
+    <select id="difT" aria-label="Dificuldade">
+      <option value="f">Fácil · 12 cartas</option>
+      <option value="m" selected>Médio · 16 cartas</option>
+      <option value="d">Difícil · 24 cartas</option>
+    </select>
+    <select id="temaT" aria-label="Tema das cartas"></select>
+    <button id="comecarT">Começar</button>
+    <button id="vTreino" class="sec">Voltar</button>
+  </section>
+
+  <section id="ranking" class="tela">
+    <p class="titulo">🏆 Ranking</p>
+    <ul id="lista" class="lis"></ul>
+    <p class="msg" id="minhaRank"></p>
+  </section>
+
+  <section id="conquistas" class="tela">
+    <p class="titulo">🎖️ Conquistas</p>
+    <ul id="listaConq" class="lis"></ul>
+  </section>
+
+  <section id="perfil" class="tela">
+    <p class="titulo">👤 Perfil</p>
+    <ul id="stats" class="lis"></ul>
+    <p class="titulo">Patentes</p>
+    <ul id="listaPat" class="lis"></ul>
+  </section>
+
+  <section id="espera" class="tela">
+    <p class="msg">Passe este código para seu amigo:</p>
+    <div class="codigo" id="meuCod">----</div>
+    <p class="msg" id="modoEspera"></p>
+    <button id="zap">Enviar pelo WhatsApp</button>
+    <button id="voltarEspera" class="sec">Voltar</button>
+    <p class="msg">Aguardando o outro jogador…</p>
+  </section>
+
+  <section id="jogo" class="tela">
+    <p class="nota" id="modoTxt"></p>
+    <div class="placar">
+      <div class="jog" id="j0"><span id="n0"></span><b id="p0">0</b></div>
+      <div class="jog" id="j1"><span id="n1"></span><b id="p1">0</b></div>
+    </div>
+    <p class="msg" id="status"></p>
+    <p id="reacao"></p>
+    <div id="grade"></div>
+    <div id="reac">
+      <button data-e="👍">👍</button>
+      <button data-e="😮">😮</button>
+      <button data-e="😂">😂</button>
+      <button data-e="👏">👏</button>
+    </div>
+    <button id="again" class="sec" style="display:none">Jogar de novo</button>
+    <button id="sair" class="sec">Sair</button>
+  </section>
+</main>
+
+<nav id="nav">
+  <button id="nInicio" class="on"><b>🏠</b>Início</button>
+  <button id="nRank"><b>🏆</b>Ranking</button>
+  <button id="nConq"><b>🎖️</b>Conquistas</button>
+  <button id="nPerfil"><b>👤</b>Perfil</button>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+<script>
+(function(){
+  var P=window.Peer;
+  window.Peer=function(id,o){
+    o=o||{};
+    o.config={iceServers:[
+      {urls:"stun:stun.l.google.com:19302"},
+      {urls:"turn:openrelay.metered.ca:80",username:"openrelayproject",credential:"openrelayproject"},
+      {urls:"turn:openrelay.metered.ca:443",username:"openrelayproject",credential:"openrelayproject"},
+      {urls:"turn:openrelay.metered.ca:443?transport=tcp",username:"openrelayproject",credential:"openrelayproject"}
+    ]};
+    return new P(id,o);
+  };
+})();
+  </script><script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,collection,query,orderBy,limit,getDocs,doc,getDoc,setDoc,updateDoc,deleteDoc,writeBatch} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app=initializeApp({
+  apiKey:"AIzaSyAFD48Xmn5tclpfFBf-tRxhs4xa_xKRL1s",
+  authDomain:"memoria-duelo.firebaseapp.com",
+  projectId:"memoria-duelo",
+  storageBucket:"memoria-duelo.firebasestorage.app",
+  messagingSenderId:"429570544752",
+  appId:"1:429570544752:web:f5a6204e02be0914c350b5"
+});
+const db=getFirestore(app),auth=getAuth(app);
+
+const TEMAS={
+  "Animais":["🐶","🐱","🦊","🐸","🐼","🦁","🐙","🦄","🐵","🐯","🐰","🐧"],
+  "Frutas":["🍎","🍌","🍇","🍓","🍍","🍉","🍒","🥝","🍑","🍋","🥥","🍐"],
+  "Esportes":["⚽","🏀","🏈","🎾","🏐","🏓","🥊","🏊","🎱","⛳","🏹","🥋"],
+  "Bandeiras":["🇧🇷","🇦🇷","🇺🇸","🇯🇵","🇫🇷","🇮🇹","🇩🇪","🇵🇹","🇪🇸","🇬🇧","🇨🇦","🇲🇽"]
+};
+const NIV={f:{n:"Fácil",p:6,tempo:20,col:3},m:{n:"Médio",p:8,tempo:15,col:4},d:{n:"Difícil",p:12,tempo:10,col:4}};
+const PAT=[[1400,"Mestre","#e5383b","c"],[1000,"Heroico","#2ecc71","w"],[700,"Diamante","#9b5de5","g"],[450,"Platina","#5ec8f2","w"],[250,"Ouro","#ffc933","s"],[100,"Prata","#c9d1d9",""],[0,"Bronze","#cd7f32",""]];
+const CONQ=["Primeira vitória","5 vitórias seguidas","10 vitórias","Chegou ao Ouro","Chegou ao Mestre","Vitória no Difícil","Vitória perfeita (rival com 0 pares)"];
+const LIGA_MIN=250;
+const SH="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5z",HL="M12 2 4 5v6c0 5 3.5 9 8 11z";
+const STAR='<path d="M12 7.5l1.4 3 3.3.4-2.4 2.3.6 3.2L12 14.8l-2.9 1.6.6-3.2-2.4-2.3 3.3-.4z" fill="#fff"/>';
+const SIM={
+  s:STAR,
+  g:'<path d="M12 8l3.2 3.6L12 16.5 8.8 11.6z" fill="#fff" opacity=".9"/>',
+  w:'<path d="M4.2 7.5.8 6l1.2 5 2.5 1zM19.8 7.5 23.2 6 22 11l-2.5 1z" fill="#fff" opacity=".85"/>'+STAR,
+  c:'<path d="M8 9.5l1.8 2.2L12 8.5l2.2 3.2L16 9.5V15H8z" fill="#fff"/>'
+};
+const LETRAS="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const $=id=>document.getElementById(id);
+const H=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const slug=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");
+const pat=p=>PAT.find(x=>p>=x[0]);
+const sh=p=>{const x=pat(p);return '<svg class="esc" viewBox="0 0 24 24"><path d="'+SH+'" fill="'+x[2]+'" stroke="rgba(0,0,0,.45)"/><path d="'+HL+'" fill="#fff" opacity=".2"/>'+(SIM[x[3]]||"")+'</svg>'};
+const liberada=()=>!!(meu&&!meu.local&&meu.pontos>=LIGA_MIN);
+const NOMEMODO={casual:"Casual",rank:"🏆 Ranqueada",liga:"🏅 Liga"};
+
+let peer,conn,eu,deck,vez,viradas,pares,placar,trava,fim,nomes=["",""],infos=[{},{}],top=[],codAtual="",nivel="m",temaJogo="Animais",tmr=null,resta=0,busca=null,uid=null,meu=null,modoSel="casual",modo="casual",bot=null,memo={};
+
+// ---------- sons ----------
+let mudo=false,ac;
+try{mudo=localStorage.getItem("mudo")==="1"}catch(e){}
+function bip(f,t,d,tipo="sine"){
+  if(mudo)return;
+  try{
+    ac=ac||new(window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==="suspended")ac.resume();
+    const o=ac.createOscillator(),g=ac.createGain(),s=ac.currentTime+t;
+    o.type=tipo;o.frequency.value=f;o.connect(g);g.connect(ac.destination);
+    g.gain.setValueAtTime(.15,s);g.gain.exponentialRampToValueAtTime(.001,s+d);
+    o.start(s);o.stop(s+d);
+  }catch(e){}
+}
+const som={
+  ok:()=>{bip(660,0,.12);bip(880,.12,.18)},
+  erro:()=>bip(180,0,.3,"square"),
+  ganhou:()=>[523,659,784,1047].forEach((f,i)=>bip(f,i*.12,.2)),
+  perdeu:()=>[392,330,262].forEach((f,i)=>bip(f,i*.15,.25))
+};
+$("som").textContent=mudo?"🔇":"🔊";
+$("som").onclick=()=>{
+  mudo=!mudo;$("som").textContent=mudo?"🔇":"🔊";
+  try{localStorage.setItem("mudo",mudo?"1":"0")}catch(e){}
+};
+
+// ---------- telas e navegação ----------
+const EMPILHA=["jogar","criar","entrar","buscar","buscando","treino","ranking","conquistas","perfil","espera","jogo"];
+const COM_NAV=["menu","ranking","conquistas","perfil"];
+const ABAS=["ranking","conquistas","perfil"];
+const BTN={menu:"nInicio",ranking:"nRank",conquistas:"nConq",perfil:"nPerfil"};
+const PAI={jogar:"menu",criar:"jogar",entrar:"jogar",buscar:"jogar",treino:"menu",ranking:"menu",conquistas:"menu",perfil:"menu"};
+function tela(id,semPush){
+  const a=document.querySelector(".tela.on"),atual=a&&a.id;
+  document.querySelectorAll(".tela").forEach(t=>t.classList.toggle("on",t.id===id));
+  $("nav").style.display=COM_NAV.includes(id)?"flex":"none";
+  Object.values(BTN).forEach(b=>$(b).classList.toggle("on",b===BTN[id]));
+  if(semPush||id===atual||!EMPILHA.includes(id))return;
+  if(ABAS.includes(atual)&&ABAS.includes(id))history.replaceState({t:id},"");
+  else history.pushState({t:id},"");
+}
+addEventListener("popstate",()=>{
+  const t=document.querySelector(".tela.on").id;
+  if(t==="jogo"){if(!sair())history.pushState({t:"jogo"},"")}
+  else if(t==="espera")voltar();
+  else if(t==="buscando")cancelarBusca();
+  else if(PAI[t])tela(PAI[t],true);
+});
+
+// ---------- conta e perfil ----------
+async function iniciarApp(){
+  try{
+    await new Promise(r=>{const u=onAuthStateChanged(auth,x=>{u();r(x)})});
+    if(!auth.currentUser)await signInAnonymously(auth);
+    uid=auth.currentUser.uid;
+    const s=await getDoc(doc(db,"jogadores",uid));
+    if(s.exists())meu=s.data();
+  }catch(e){uid=null}
+  if(!meu&&!uid){
+    try{const n=localStorage.getItem("nomeLocal");if(n)meu={nome:n,slug:slug(n),pontos:0,vitorias:0,sequencia:0,local:true}}catch(e){}
+  }
+  if(meu){atualizarPerfil();tela("menu",true)}else tela("boas",true);
+}
+async function confirmarNome(){
+  const n=$("nome").value.trim(),id=slug(n);
+  if(n.length<2||id.length<2){$("msgNome").textContent="Use de 2 a 12 letras ou números.";return}
+  $("msgNome").textContent="Salvando…";
+  if(!uid){
+    try{localStorage.setItem("nomeLocal",n)}catch(e){}
+    meu={nome:n,slug:id,pontos:0,vitorias:0,sequencia:0,local:true};atualizarPerfil();tela("menu",true);return;
+  }
+  try{
+    if((await getDoc(doc(db,"nomes",id))).exists()){$("msgNome").textContent="Esse nome já está em uso. Escolha outro.";return}
+    const b=writeBatch(db),p={nome:n,slug:id,pontos:0,vitorias:0,sequencia:0};
+    b.set(doc(db,"nomes",id),{uid});
+    b.set(doc(db,"jogadores",uid),p);
+    await b.commit();
+    meu=p;atualizarPerfil();tela("menu",true);
+  }catch(e){$("msgNome").textContent="Não foi possível salvar. Confira a internet e tente de novo."}
+}
+function atualizarPerfil(){
+  const x=pat(meu.pontos),i=PAT.indexOf(x),nx=PAT[i-1];
+  $("cartao").innerHTML=sh(meu.pontos)+" "+H(meu.nome)+" · "+x[1]+" · "+meu.pontos+" pts";
+  $("barraI").style.width=(nx?Math.round((meu.pontos-x[0])/(nx[0]-x[0])*100):100)+"%";
+  $("faltam").textContent=nx?"Faltam "+(nx[0]-meu.pontos)+" pts para "+nx[1]:"Patente máxima!";
+  if(meu.local)modoSel="casual";
+  if(modoSel==="liga"&&!liberada())modoSel="casual";
+  $("mRank").style.opacity=meu.local?.4:1;
+  $("mLiga").style.opacity=liberada()?1:.4;
+  $("ligaNota").textContent=modoSel==="liga"?"🏅 Liga: só Ouro ou mais · +25 / +8 / -15 pts":(!meu.local&&!liberada()?"🏅 Chegue ao Ouro ("+LIGA_MIN+" pts) para liberar a Liga":"");
+  $("mCasual").classList.toggle("sec",modoSel!=="casual");
+  $("mRank").classList.toggle("sec",modoSel!=="rank");
+  $("mLiga").classList.toggle("sec",modoSel!=="liga");
+}
+function mostrarPerfil(){
+  const v=meu.vitorias||0,d=meu.derrotas||0,t=v+d,x=pat(meu.pontos);
+  const L=[["Patente",sh(meu.pontos)+" "+x[1]],["Pontos",meu.pontos],["Vitórias",v],["Derrotas",d],
+    ["Taxa de vitória",t?Math.round(v/t*100)+"%":"—"],["Sequência atual",(meu.sequencia||0)+"🔥"],
+    ["Melhor sequência",Math.max(meu.melhor||0,meu.sequencia||0)+"🔥"]];
+  $("stats").innerHTML=L.map(a=>"<li><span>"+a[0]+"</span><b>"+a[1]+"</b></li>").join("");
+  $("listaPat").innerHTML=[...PAT].reverse().map(p=>
+    '<li class="'+(x===p?"eu":meu.pontos<p[0]?"off":"")+'"><span>'+sh(p[0])+" "+p[1]+"</span><b>"+p[0]+" pts</b></li>"
+  ).join("");
+}
+
+// ---------- ranking, conquistas e pontos ----------
+async function carregarTop(){
+  try{
+    const s=await getDocs(query(collection(db,"jogadores"),orderBy("pontos","desc"),limit(200)));
+    top=s.docs.map(d=>({id:d.id,...d.data()}));
+    return true;
+  }catch(e){return false}
+}
+async function registrar(res,ev){
+  if(!uid||!meu||meu.local)return [];
+  try{
+    const lg=!!(ev&&ev.liga);
+    const dp=lg?(res==="v"?25:res==="e"?8:-15):(res==="v"?20:res==="e"?5:-10);
+    let c=meu.conq||0;const nv=[];
+    const pts=Math.max(0,meu.pontos+dp),vit=meu.vitorias+(res==="v"?1:0);
+    const seq=res==="v"?meu.sequencia+1:res==="d"?0:meu.sequencia;
+    const m0=meu.melhor||0,mel=Math.min(m0+1,Math.max(m0,seq));
+    [vit>=1,seq>=5,vit>=10,pts>=250,pts>=1400,!!(ev&&ev.dif==="d"&&res==="v"),!!(ev&&ev.zero&&res==="v")].forEach((v,i)=>{
+      if(v&&!((c>>i)&1)){c|=1<<i;nv.push(CONQ[i])}
+    });
+    const n={pontos:pts,vitorias:vit,derrotas:(meu.derrotas||0)+(res==="d"?1:0),sequencia:seq,melhor:mel,conq:c};
+    await updateDoc(doc(db,"jogadores",uid),n);
+    Object.assign(meu,n);
+    return nv;
+  }catch(e){return []}
+}
+async function mostrarRanking(){
+  $("lista").innerHTML="<li>Carregando…</li>";$("minhaRank").textContent="";
+  if(!await carregarTop()){$("lista").innerHTML="<li>Não foi possível carregar o ranking.</li>";return}
+  const med=["🥇","🥈","🥉"];
+  $("lista").innerHTML=top.slice(0,10).map((r,i)=>
+    '<li class="'+(r.id===uid?"eu":"")+'"><span>'+(med[i]||(i+1)+".")+" "+sh(r.pontos)+" "+H(r.nome)+(r.id===uid?" (você)":"")+"</span><b>"+r.pontos+" pts</b></li>"
+  ).join("")||"<li>Ninguém no ranking ainda.</li>";
+  const k=top.findIndex(r=>r.id===uid);
+  if(k>=10)$("minhaRank").textContent="Sua posição: #"+(k+1);
+}
+function mostrarConq(){
+  const c=meu&&meu.conq||0;
+  $("listaConq").innerHTML=CONQ.map((n,i)=>
+    '<li class="'+((c>>i)&1?"eu":"off")+'"><span>'+((c>>i)&1?"✅ ":"🔒 ")+n+"</span></li>"
+  ).join("");
+}// ---------- utilidades ----------
+let botTm=null,ultReac=0,reTm=null;
+const emb=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const sortearTema=()=>{const k=Object.keys(TEMAS);return k[Math.floor(Math.random()*k.length)]};
+const sorteia=()=>{const e=TEMAS[temaJogo].slice(0,NIV[nivel].p);return emb([...e,...e])};
+const codigo=()=>Array.from({length:4},()=>LETRAS[Math.floor(Math.random()*LETRAS.length)]).join("");
+const env=m=>{try{if(conn&&conn.open)conn.send(m)}catch(e){}};
+const et=i=>(bot&&i===1)?"🤖 Robô":sh(infos[i].p||0)+" "+H(nomes[i])+((infos[i].s||0)>0?" "+infos[i].s+"🔥":"");
+function fecharConexao(){
+  clearInterval(tmr);clearTimeout(botTm);botTm=null;bot=null;
+  try{conn&&conn.close()}catch(e){}
+  try{peer&&peer.destroy()}catch(e){}
+  conn=peer=null;
+}
+function voltar(){fecharConexao();$("msgCriar").textContent="";tela("criar",true)}
+function sair(){
+  let p=Promise.resolve([]);
+  if(deck&&!fim&&!bot){
+    if(!confirm("Sair da partida?"+(modo!=="casual"?" Conta como derrota.":"")))return false;
+    if(modo!=="casual")p=registrar("d",{liga:modo==="liga"});
+  }
+  fim=true;deck=null;fecharConexao();
+  tela("menu",true);
+  p.then(atualizarPerfil);
+  return true;
+}
+
+// ---------- salas por código ----------
+function criarSala(){
+  fecharConexao();
+  const c=codigo();codAtual=c;
+  peer=new Peer("memoria-"+c);
+  peer.on("open",()=>{
+    eu=0;$("meuCod").textContent=c;
+    $("modoEspera").textContent=NOMEMODO[modoSel]+" · "+NIV[$("dif").value].n;
+    tela("espera");
+  });
+  peer.on("error",e=>{if(e.type==="unavailable-id")criarSala();else $("msgCriar").textContent="Erro de conexão. Tente de novo."});
+  peer.on("connection",x=>{if(conn){x.close();return}conn=x;ligar()});
+}
+function entrarSala(){
+  const c=$("cod").value.trim().toUpperCase();
+  if(c.length!==4){$("msgMenu").textContent="Digite o código de 4 letras.";return}
+  fecharConexao();
+  $("msgMenu").textContent="Conectando…";
+  peer=new Peer();
+  peer.on("open",()=>{
+    eu=1;conn=peer.connect("memoria-"+c);ligar();
+    conn.on("open",()=>conn.send({t:"hello",nome:meu.nome,rk:!meu.local,p:meu.pontos,s:meu.sequencia}));
+  });
+  peer.on("error",()=>{$("msgMenu").textContent="Sala não encontrada. Confira o código."});
+  setTimeout(()=>{
+    if(!(conn&&conn.open)&&$("entrar").classList.contains("on")){
+      fecharConexao();$("msgMenu").textContent="Não conseguiu conectar. Tente de novo.";
+    }
+  },15000);
+}
+
+// ---------- busca de oponente ----------
+function pararBusca(){
+  if(busca){clearTimeout(busca.tm);busca.ativa=false}
+  busca=null;
+  if(uid)deleteDoc(doc(db,"fila",uid)).catch(()=>{});
+}
+function cancelarBusca(){pararBusca();fecharConexao();tela("buscar",true)}
+function procurar(){
+  if(!uid||meu.local){$("msgBuscar").textContent="Busca indisponível agora.";return}
+  if(modoSel==="liga"&&!liberada()){$("msgBuscar").textContent="A Liga é só para Ouro ou mais.";return}
+  const difs=["f","m","d"].filter(k=>$("t"+k).classList.contains("on"));
+  if(!difs.length){$("msgBuscar").textContent="Marque pelo menos uma dificuldade.";return}
+  fecharConexao();$("msgBuscar").textContent="";
+  busca={difs,modo:modoSel,ativa:true,tentando:false};
+  peer=new Peer();
+  peer.on("error",()=>{if(busca){pararBusca();fecharConexao();tela("buscar",true);$("msgBuscar").textContent="Erro de conexão. Tente de novo."}});
+  peer.on("connection",x=>{if(!busca||conn){x.close();return}conn=x;eu=0;ligar()});
+  peer.on("open",id=>{
+    if(!busca)return;
+    busca.peer=id;
+    $("infoBusca").textContent=NOMEMODO[busca.modo]+" · "+difs.map(k=>NIV[k].n).join(", ");
+    tela("buscando");ciclo();
+  });
+}
+async function ciclo(){
+  if(!busca||!busca.ativa)return;
+  try{
+    await setDoc(doc(db,"fila",uid),{nome:meu.nome,modo:busca.modo,dif:busca.difs,peer:busca.peer,t:Date.now()});
+    const s=await getDocs(collection(db,"fila")),agora=Date.now();
+    const alvo=s.docs.filter(d=>d.id<uid).map(d=>d.data())
+      .find(c=>c.modo===busca.modo&&agora-c.t<20000&&c.dif.some(x=>busca.difs.includes(x)));
+    if(alvo&&busca&&!conn&&!busca.tentando)conectarFila(alvo);
+  }catch(e){}
+  if(busca&&busca.ativa)busca.tm=setTimeout(ciclo,3000);
+}
+function conectarFila(alvo){
+  busca.tentando=true;
+  const c=peer.connect(alvo.peer);
+  const a=setTimeout(()=>{if(!c.open){try{c.close()}catch(e){}if(busca)busca.tentando=false}},8000);
+  c.on("open",()=>{
+    clearTimeout(a);
+    if(!busca){c.close();return}
+    conn=c;eu=1;ligar();
+    conn.send({t:"hello",nome:meu.nome,rk:true,p:meu.pontos,s:meu.sequencia,difs:busca.difs,modo:busca.modo});
+  });
+}
+
+// ---------- mensagens da conexão ----------
+function ligar(){
+  conn.on("data",m=>{
+    if(m.t==="hello"&&eu===0&&!deck){
+      const g=String(m.nome||"Amigo").slice(0,12),pg=+m.p||0;
+      if(busca){
+        const com=["d","m","f"].filter(k=>busca.difs.includes(k)&&(m.difs||[]).includes(k));
+        if(!com.length||m.modo!==busca.modo||(busca.modo==="liga"&&pg<LIGA_MIN)){try{conn.close()}catch(e){}conn=null;return}
+        nivel=com[0];modo=busca.modo;temaJogo=sortearTema();pararBusca();
+      }else{
+        nivel=$("dif").value;temaJogo=$("tema").value;
+        if(modoSel==="liga"){
+          if(pg<LIGA_MIN){
+            const x=conn;env({t:"recusa"});
+            setTimeout(()=>{try{x.close()}catch(e){}if(conn===x)conn=null},300);
+            return;
+          }
+          modo="liga";
+        }else modo=(modoSel==="rank"&&!meu.local&&m.rk)?"rank":"casual";
+      }
+      nomes=[meu.nome,g];
+      infos=[{p:meu.pontos,s:meu.sequencia},{p:pg,s:+m.s||0}];
+      iniciar(sorteia(),true);
+    }
+    else if(m.t==="recusa"){
+      fecharConexao();tela("entrar",true);
+      $("msgMenu").textContent="Sala da Liga: só para Ouro ou mais.";
+    }
+    else if(m.t==="start"&&Array.isArray(m.deck)&&Array.isArray(m.nomes)){
+      if(busca)pararBusca();
+      nomes=m.nomes.map(x=>String(x).slice(0,12));infos=m.infos||[{},{}];
+      modo=["casual","rank","liga"].includes(m.modo)?m.modo:"casual";nivel=NIV[m.nivel]?m.nivel:"m";
+      iniciar(m.deck,false);
+    }
+    else if(m.t==="flip")virar(m.i,true);
+    else if(m.t==="skip"&&deck&&vez!==eu)passar(false);
+    else if(m.t==="emo"&&["👍","😮","😂","👏"].includes(m.e)&&deck){
+      $("reacao").textContent=nomes[1-eu]+": "+m.e;limpaReacao();
+    }
+    else if(m.t==="again"&&eu===0){
+      infos=[{p:meu.pontos,s:meu.sequencia},{p:+m.p||0,s:+m.s||0}];
+      iniciar(sorteia(),true);
+    }
+  });
+  conn.on("close",()=>{
+    if(!deck||fim){if(busca&&!deck){conn=null;busca.tentando=false}return}
+    fim=true;clearInterval(tmr);
+    $("status").textContent=nomes[1-eu]+" saiu da partida.";
+    $("again").style.display="none";$("sair").textContent="Voltar ao menu";
+    if(modo!=="casual")registrar("v",{dif:nivel,liga:modo==="liga"}).then(atualizarPerfil);
+  });
+}
+
+// ---------- partida ----------
+function iniciar(d,envia){
+  deck=d;vez=0;viradas=[];pares=0;placar=[0,0];trava=false;fim=false;memo={};
+  if(envia)env({t:"start",deck,nomes,infos,modo,nivel});
+  const g=$("grade");g.innerHTML="";g.style.gridTemplateColumns="repeat("+NIV[nivel].col+",1fr)";
+  deck.forEach((e,i)=>{
+    const b=document.createElement("button");b.className="carta";b.id="c"+i;
+    b.innerHTML='<i class="costas">?</i><i class="frente">'+H(e)+'</i>';
+    b.onclick=()=>virar(i,false);g.appendChild(b);
+  });
+  $("again").style.display="none";$("sair").textContent="Sair";
+  $("reac").style.display=bot?"none":"flex";$("reacao").textContent="";
+  $("modoTxt").textContent=(bot?"🤖 Treino":NOMEMODO[modo])+" · "+NIV[nivel].n;
+  tela("jogo");atualiza();iniciarTempo();
+}
+function iniciarTempo(){
+  clearInterval(tmr);resta=NIV[nivel].tempo;
+  tmr=setInterval(()=>{
+    resta--;
+    if(resta<=0){clearInterval(tmr);if(vez===eu&&!fim&&!trava)passar(true)}
+    atualiza();
+  },1000);
+}
+function passar(envia){
+  if(!deck||fim)return;
+  viradas.forEach(i=>$("c"+i).classList.remove("vira"));
+  viradas=[];trava=false;vez=1-vez;
+  if(envia)env({t:"skip"});
+  som.erro();atualiza();iniciarTempo();
+}
+function virar(i,remoto){
+  if(!deck||!Number.isInteger(i)||i<0||i>=deck.length)return;
+  if(fim||trava||viradas.includes(i)||$("c"+i).classList.contains("par"))return;
+  if(remoto===true&&vez===eu)return;
+  if(remoto==="bot"&&vez!==1)return;
+  if(!remoto&&vez!==eu)return;
+  $("c"+i).classList.add("vira");memo[i]=deck[i];
+  if(!remoto)env({t:"flip",i});
+  viradas.push(i);
+  if(viradas.length===2){trava=true;setTimeout(confere,900)}
+}
+function confere(){
+  if(!deck||fim)return;
+  const[a,b]=viradas;
+  if(deck[a]===deck[b]){
+    [a,b].forEach(i=>$("c"+i).classList.add("par"));
+    delete memo[a];delete memo[b];
+    placar[vez]++;pares++;som.ok();
+  }else{
+    [a,b].forEach(i=>$("c"+i).classList.remove("vira"));
+    vez=1-vez;som.erro();
+  }
+  viradas=[];trava=false;
+  if(pares===deck.length/2)terminar();else iniciarTempo();
+  atualiza();
+}
+function terminar(){
+  fim=true;clearInterval(tmr);
+  const a=placar[eu],b=placar[1-eu],res=a>b?"v":a<b?"d":"e";
+  const tab=modo==="liga"?{v:"+25",e:"+8",d:"-15"}:{v:"+20",e:"+5",d:"-10"};
+  $("status").textContent=(res==="e"?"Empate!":res==="v"?"Você ganhou! 🎉":nomes[1-eu]+" ganhou.")
+    +(modo!=="casual"?" · "+tab[res]+" pts":"");
+  $("again").style.display="block";$("sair").textContent="Voltar ao menu";
+  if(res==="v")som.ganhou();else if(res==="d")som.perdeu();
+  if(modo!=="casual"&&!bot)registrar(res,{dif:nivel,zero:b===0,liga:modo==="liga"}).then(nv=>{
+    if(nv.length)$("status").textContent+=" · 🎖️ "+nv.join(", ");
+    atualizarPerfil();
+  });
+}
+function atualiza(){
+  if(!deck)return;
+  $("n0").innerHTML=et(eu);$("n1").innerHTML=et(1-eu);
+  $("p0").textContent=placar[eu];$("p1").textContent=placar[1-eu];
+  $("j0").classList.toggle("vez",vez===eu&&!fim);
+  $("j1").classList.toggle("vez",vez!==eu&&!fim);
+  if(!fim)$("status").textContent=vez===eu?"Sua vez · "+Math.max(resta,0)+"s":"Vez de "+nomes[1-eu]+(bot?"":" · "+Math.max(resta,0)+"s");
+  if(bot&&vez===1&&!fim&&!trava&&!botTm&&viradas.length<2)botTm=setTimeout(botJoga,1000+Math.random()*900);
+}
+
+// ---------- robô ----------
+function livres(){return deck.map((_,i)=>i).filter(i=>!$("c"+i).classList.contains("par")&&!viradas.includes(i))}
+function botEscolhe(){
+  const L=livres(),r=bot.lembra,ale=a=>a[Math.floor(Math.random()*a.length)];
+  if(viradas.length===1){
+    const j=L.find(i=>memo[i]===deck[viradas[0]]);
+    if(j!==undefined&&Math.random()<r)return j;
+  }else{
+    const p=L.find(i=>memo[i]!==undefined&&L.some(k=>k!==i&&memo[k]===memo[i]));
+    if(p!==undefined&&Math.random()<r)return p;
+  }
+  const nv=L.filter(i=>!(i in memo));
+  return ale(nv.length?nv:L);
+}
+function botJoga(){
+  botTm=null;
+  if(!bot||!deck||fim||vez!==1||trava||viradas.length>=2)return;
+  virar(botEscolhe(),"bot");
+  if(viradas.length===1&&vez===1&&!fim)botTm=setTimeout(botJoga,900+Math.random()*700);
+}
+function comecarTreino(){
+  fecharConexao();
+  nivel=$("difT").value;temaJogo=$("temaT").value;modo="casual";eu=0;
+  nomes=[meu.nome,"Robô"];infos=[{p:meu.pontos,s:meu.sequencia},{p:0,s:0}];
+  bot={lembra:{f:.35,m:.65,d:.95}[nivel]};
+  iniciar(sorteia(),false);
+}
+
+// ---------- reações ----------
+function limpaReacao(){clearTimeout(reTm);reTm=setTimeout(()=>{$("reacao").textContent=""},2500)}
+document.querySelectorAll("#reac button").forEach(b=>b.onclick=()=>{
+  if(!deck||Date.now()-ultReac<1500)return;
+  ultReac=Date.now();env({t:"emo",e:b.dataset.e});
+  $("reacao").textContent="Você: "+b.dataset.e;limpaReacao();
+});
+
+// ---------- botões ----------
+Object.keys(TEMAS).forEach(t=>["tema","temaT"].forEach(id=>{const o=document.createElement("option");o.value=o.textContent=t;$(id).appendChild(o)}));
+$("btnNome").onclick=confirmarNome;
+$("bJogar").onclick=()=>{atualizarPerfil();tela("jogar")};
+$("bTreino").onclick=()=>tela("treino");
+$("cartao").onclick=()=>{mostrarPerfil();tela("perfil")};
+$("mCasual").onclick=()=>{modoSel="casual";atualizarPerfil()};
+$("mRank").onclick=()=>{if(meu&&!meu.local){modoSel="rank";atualizarPerfil()}};
+$("mLiga").onclick=()=>{if(liberada())modoSel="liga";atualizarPerfil()};
+$("bCriar").onclick=()=>{$("msgCriar").textContent="";tela("criar")};
+$("bEntrar").onclick=()=>{$("msgMenu").textContent="";tela("entrar")};
+$("bBuscar").onclick=()=>{$("modoBuscar").textContent=NOMEMODO[modoSel];$("msgBuscar").textContent="";tela("buscar")};
+["vJogar","vCriar","vEntrar","vBuscar","vTreino","voltarEspera","cancelar","sair"].forEach(id=>$(id).onclick=()=>history.back());
+["f","m","d"].forEach(k=>{$("t"+k).onclick=()=>$("t"+k).classList.toggle("on")});
+$("criarSala").onclick=criarSala;
+$("entrarSala").onclick=entrarSala;
+$("procurar").onclick=procurar;
+$("comecarT").onclick=comecarTreino;
+$("again").onclick=()=>{
+  if(eu===0){infos[0]={p:meu.pontos,s:meu.sequencia};iniciar(sorteia(),true)}
+  else env({t:"again",p:meu.pontos,s:meu.sequencia});
+};
+$("nInicio").onclick=()=>{if(document.querySelector(".tela.on").id!=="menu")history.back()};
+$("nRank").onclick=()=>{tela("ranking");mostrarRanking()};
+$("nConq").onclick=()=>{mostrarConq();tela("conquistas")};
+$("nPerfil").onclick=()=>{mostrarPerfil();tela("perfil")};
+$("zap").onclick=()=>{
+  const link=location.origin+location.pathname.replace(/[^/]*$/,"");
+  window.open("https://wa.me/?text="+encodeURIComponent("Vem jogar Memória Duelo comigo! 🧠\nCódigo da sala: "+codAtual+"\n"+link),"_blank");
+};
+iniciarApp();
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
+</script>
+<script src="config.js" defer></script>
+<script src="multi.js" defer></script>
+<script src="espectar.js" defer></script>
+<script src="amigos.js" defer></script>
+</body>
+</html>
