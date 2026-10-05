@@ -1,4 +1,4 @@
-const CACHE = "memoria-duelo-v3";
+const CACHE = "memoria-duelo-v4";
 const ARQUIVOS = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 
 self.addEventListener("install", e => {
