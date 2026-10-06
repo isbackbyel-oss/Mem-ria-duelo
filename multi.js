@@ -87,14 +87,14 @@ function criar(){
   });
 }
 function reseat(){
-  conns.forEach((c,i)=>{try{c.send({t:"seat",seat:i+1})}catch(e){}});
+    if(eq()&&conns.length===N-1){const A=conns.filter(c=>c.eq==="A"),B=conns.filter(c=>c.eq!=="A");if(A.length===1&&B.length===2)conns=[B[0],A[0],B[1]]}conns.forEach((c,i)=>{try{c.send({t:"seat",seat:i+1})}catch(e){}});
   nomes=[meuNome(),...conns.map(c=>c.nome)];
   bc({t:"lobby",nomes,N,md,nv});lobby();
 }
 function doHost(x,m){
   if(m.t==="hello"&&!deck&&!conns.includes(x)){
     if(conns.length>=N-1){x.close();return}
-    x.nome=String(m.nome||"Jogador").slice(0,12);conns.push(x);reseat();
+        x.nome=String(m.nome||"Jogador").slice(0,12);x.eq=String(m.eq||"").slice(0,1);conns.push(x);reseat();
     if(conns.length===N-1)setTimeout(comecar,1200);
   }else if(m.t==="flip"&&deck){
     const s=conns.indexOf(x)+1;
@@ -113,7 +113,7 @@ function entrar(){
   peer=new Peer();
   peer.on("open",()=>{
     hc=peer.connect("memoriam-"+c);
-    hc.on("open",()=>snd({t:"hello",nome:meuNome()}));
+        hc.on("open",()=>snd({t:"hello",nome:meuNome(),eq:window.__eq||""}));
     hc.on("data",doGuest);
     hc.on("close",()=>{
       if(deck&&!fim)encerrar("A sala foi encerrada.");
