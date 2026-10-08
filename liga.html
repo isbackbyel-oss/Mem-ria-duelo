@@ -715,7 +715,7 @@ $("nConq").onclick=()=>{mostrarConq();tela("conquistas")};
 $("nPerfil").onclick=()=>{mostrarPerfil();tela("perfil")};
 $("zap").onclick=()=>{
   const link=location.origin+location.pathname.replace(/[^/]*$/,"");
-  window.open("https://wa.me/?text="+encodeURIComponent("Vem jogar Memória Duelo comigo! 🧠\nCódigo da sala: "+codAtual+"\n"+link),"_blank");
+  window.open("https://wa.me/?text="+encodeURIComponent("Vem jogar Memória Duelo comigo! 🧠\nCódigo da sala: "+codAtual+"\n"+link),"_blank");<script src="visual3.js" defer></script>
 };
 iniciarApp();
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
