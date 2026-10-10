@@ -1,6 +1,6 @@
 (function(){
-const L=["config.js","multi.js","espectar.js","social.js","dupla.js","extras.js","home.js","visual.js","visual2.js","avatares.js","visual3.js","visual4.js","visual5.js","moedas.js"],"menujogo.js"]
-const t=Math.floor(Date.now()/60000),falhas=[];
+const L=["config.js","multi.js","espectar.js","social.js","dupla.js","extras.js","home.js","visual.js","visual2.js","avatares.js","visual3.js","visual4.js","visual5.js","menujogo.js"]"moedas.js"
+  const t=Math.floor(Date.now()/60000),falhas=[];
 const ja=n=>[...document.scripts].some(s=>(s.getAttribute("src")||"").split("?")[0]===n);
 let i=0;
 function prox(){
