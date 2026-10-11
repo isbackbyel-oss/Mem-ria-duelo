@@ -49,10 +49,10 @@ async function iniciar(){
   carregando=false;
 }
 const wal=()=>window.MOEDAS&&window.MOEDAS.saldo();
-const saldo=()=>(wal()?wal().m:0)-S;
-function render(){
+
+  const saldo=()=>(wal()?wal().m:0)-S-(window.__S2||0);function render(){
   const w=wal();
-  $("ljS").textContent="🪙 "+fmt(saldo())+"    💎 "+fmt(w?w.d:0);
+  $("ljS").textContent="🪙 "+fmt(saldo())+"    💎 "+fmt((w?w.d:0)-(window.__SD||0))
   ["c","m","f"].forEach(k=>$("lt"+k).classList.toggle("on",aba===k));
   $("lj").innerHTML=IT.filter(x=>x[1]===aba).map(x=>{
     const dono=x[3]===0||inv.i.includes(x[0]),eq=inv.e[x[1]]===x[0];
